@@ -52,6 +52,8 @@ Ahora el command guarda el registro **y** la fila `AuditoriaRegistrada` en `outb
 
 ## 5. Qué dejé fuera y qué haría con 2 días más
 
+Lo pendiente que bloquea el corte o cambia el contrato ya está especificado en [`docs/specs/`](docs/specs/README.md): SPEC-001 (notificación a Seguridad), SPEC-002 (adaptador Oracle para coexistencia) y SPEC-003 (contrato v2).
+
 - **Consumidor de notificación a Seguridad** (idempotente por `MessageId`, HTML escapado). Es un bloqueante del corte.
 - **Adaptador Oracle** (`Oracle.EntityFrameworkCore`, secuencia compartida, convención de fecha) y pruebas contra Oracle XE.
 - **Observabilidad completa**: hoy hay trazas OpenTelemetry (ASP.NET Core, Npgsql y la publicación del outbox, que continúa la traza con `trace_parent`) y métricas (`auditoria.outbox.publicados/fallidos/retraso`) exportadas por OTLP si se configura `OTEL_EXPORTER_OTLP_ENDPOINT`. Falta el collector en el compose, un gauge de pendientes, dashboards y alertas del canary, y propagar el contexto al consumidor en RabbitMQ.

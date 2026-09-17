@@ -66,6 +66,7 @@ src/
   Auditoria.Api             Endpoints del contrato, JWT, health checks, Swagger, logs JSON
 tests/                      Unitarias e integración
 db/001_esquema.sql          Esquema (tabla append-only, secuencia, outbox)
+docs/specs/                  Especificaciones (SDD) del trabajo pendiente
 k8s/                        Deployment, Service, PDB, ConfigMap, plantilla de Secret, HTTPRoute canary
 starter/                    Material de partida: código legacy, contrato vigente, compose original
 ```
