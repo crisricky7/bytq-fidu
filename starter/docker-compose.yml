@@ -6,7 +6,7 @@ services:
     container_name: eval-postgres
     environment:
       POSTGRES_USER: audit
-      POSTGRES_PASSWORD: <REDACTADO>
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # valor del material original retirado del repositorio
       POSTGRES_DB: auditdb
     ports: ["5432:5432"]
     healthcheck:

@@ -9,27 +9,29 @@ hallazgos del código legacy y el plan de corte están en **[DECISIONES.md](DECI
 Requisito: Docker Desktop / Docker Engine con Compose v2.
 
 ```bash
-docker compose up --build
+./scripts/init-env.sh && docker compose up --build
 ```
+
+En PowerShell: `./scripts/init-env.ps1; docker compose up --build`.
+
+`init-env` genera un `.env` **no versionado** con contraseñas y clave JWT aleatorias (una sola vez;
+no sobrescribe uno existente). También se puede copiar `.env.example` y completarlo a mano.
+Ningún secreto vive en el repositorio: el compose falla con un mensaje claro si falta alguna variable.
 
 | Servicio | URL |
 |---|---|
 | API + Swagger | http://localhost:8080/swagger |
 | Liveness / Readiness | http://localhost:8080/healthz · http://localhost:8080/readyz |
-| RabbitMQ (management) | http://localhost:15672 (`auditoria` / `<REDACTADO>`) |
-| PostgreSQL | `localhost:5432`, base `auditdb` (`audit` / `<REDACTADO>`) |
+| RabbitMQ (management) | http://localhost:15672 (`RABBITMQ_USER` / `RABBITMQ_PASSWORD` de `.env`) |
+| PostgreSQL | `localhost:5432`, base `auditdb` (`POSTGRES_USER` / `POSTGRES_PASSWORD` de `.env`) |
 
 El esquema (`db/001_esquema.sql`) se aplica automáticamente al crear el volumen de PostgreSQL.
 Para empezar de cero: `docker compose down -v`.
 
-> Las credenciales y la clave JWT del compose son **solo de desarrollo** (las del material del
-> ejercicio) y se pueden sobrescribir con variables de entorno (`POSTGRES_PASSWORD`,
-> `RABBITMQ_PASSWORD`, `JWT_CLAVE_FIRMA`). La aplicación no tiene secretos en `appsettings.json`.
-
 ## Probar la API
 
 ```bash
-TOKEN=$(node scripts/token-dev.mjs)            # o generarlo en jwt.io con starter/JWT-DEV.md
+TOKEN=$(node scripts/token-dev.mjs)            # firma con JWT_CLAVE_FIRMA de .env
 
 curl -s -X POST http://localhost:8080/api/auditoria/registro \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
@@ -90,8 +92,9 @@ Dependencias: `Api → Application, Infrastructure`; `Infrastructure → Applica
 
 ```bash
 docker compose up -d postgres rabbitmq
-export ConnectionStrings__Auditoria="Host=localhost;Database=auditdb;Username=audit;Password=<REDACTADO>"
-export Autenticacion__ClaveFirma="<REDACTADO>"
+set -a; . ./.env; set +a
+export ConnectionStrings__Auditoria="Host=localhost;Database=auditdb;Username=$POSTGRES_USER;Password=$POSTGRES_PASSWORD"
+export Autenticacion__ClaveFirma="$JWT_CLAVE_FIRMA"
 dotnet run --project src/Auditoria.Api
 ```
 

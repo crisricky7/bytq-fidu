@@ -7,7 +7,7 @@ Entra ID — la diferencia debe quedar aislada en configuración, no en el códi
 ```
 Issuer:   https://sts.windows.net/eval-tenant/
 Audience: api://corefid-audit
-Secret:   <REDACTADO>
+Secret:   (entregado en el material del ejercicio; en este repositorio se configura en JWT_CLAVE_FIRMA vía .env)
 Algoritmo: HS256
 ```
 

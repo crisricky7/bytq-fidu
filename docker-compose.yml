@@ -1,4 +1,5 @@
 # Entorno local completo: PostgreSQL + RabbitMQ + microservicio.
+#   ./scripts/init-env.sh      (o scripts/init-env.ps1)  -> genera .env con secretos aleatorios
 #   docker compose up --build
 #
 # Basado en starter/docker-compose.yml con tres cambios justificados:
@@ -7,16 +8,15 @@
 #     y el servicio se conecta desde otro contenedor.
 #  3. Se agrega el servicio "auditoria-api".
 #
-# Todos los valores sensibles de este archivo son de DESARROLLO LOCAL (los mismos que entrega el
-# material del ejercicio) y se pueden sobrescribir con variables de entorno o un archivo .env.
-# En Kubernetes vienen de un Secret y la validación JWT usa el JWKS de Entra ID, sin clave compartida.
+# Ningún secreto vive en este archivo: todos se leen de .env (no versionado). En Kubernetes vienen
+# de un Secret y la validación JWT usa el JWKS de Entra ID, sin clave compartida.
 services:
   postgres:
     image: postgres:16-alpine
     container_name: eval-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-audit}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-<REDACTADO>}
+      POSTGRES_USER: ${POSTGRES_USER:?Defina POSTGRES_USER en .env (ver .env.example)}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en .env (ver .env.example)}
       POSTGRES_DB: auditdb
     ports: ["5432:5432"]
     volumes:
@@ -31,8 +31,8 @@ services:
     image: rabbitmq:3.13-management-alpine
     container_name: eval-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-auditoria}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-<REDACTADO>}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?Defina RABBITMQ_USER en .env (ver .env.example)}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Defina RABBITMQ_PASSWORD en .env (ver .env.example)}
     ports: ["5672:5672", "15672:15672"]
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
@@ -48,12 +48,12 @@ services:
       rabbitmq: { condition: service_healthy }
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Auditoria: "Host=postgres;Port=5432;Database=auditdb;Username=${POSTGRES_USER:-audit};Password=${POSTGRES_PASSWORD:-<REDACTADO>};Gss Encryption Mode=Disable"
+      ConnectionStrings__Auditoria: "Host=postgres;Port=5432;Database=auditdb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Gss Encryption Mode=Disable"
       Autenticacion__Issuer: "https://sts.windows.net/eval-tenant/"
       Autenticacion__Audience: "api://corefid-audit"
-      Autenticacion__ClaveFirma: ${JWT_CLAVE_FIRMA:-<REDACTADO>}
+      Autenticacion__ClaveFirma: ${JWT_CLAVE_FIRMA:?Defina JWT_CLAVE_FIRMA en .env (ver .env.example)}
       Outbox__Publicador: RabbitMq
       RabbitMq__Host: rabbitmq
-      RabbitMq__Usuario: ${RABBITMQ_USER:-auditoria}
-      RabbitMq__Clave: ${RABBITMQ_PASSWORD:-<REDACTADO>}
+      RabbitMq__Usuario: ${RABBITMQ_USER}
+      RabbitMq__Clave: ${RABBITMQ_PASSWORD}
     ports: ["8080:8080"]

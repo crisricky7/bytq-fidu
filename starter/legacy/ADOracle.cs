@@ -15,6 +15,7 @@ namespace Core.AccessData
 
         // Cadena de conexión del ambiente. Se cambia manualmente por ambiente.
         private const string CONNECTION_STRING =
+            // Valor real retirado del repositorio: el defecto es que la credencial esté en el código.
             "User Id=COREFID;Password=<REDACTADO>;Data Source=//10.0.2.31:1521/ORCLPDB1;";
 
         public void Abrir()
