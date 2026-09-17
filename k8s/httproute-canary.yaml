@@ -1,0 +1,42 @@
+# Corte Strangler Fig de /api/auditoria del monolito al microservicio.
+# Se cambia SOLO el peso vía PR (GitOps): 0 -> 5 -> 25 -> 50 -> 100.
+# Rollback = volver el peso del microservicio a 0 (segundos, sin redeploy ni tocar el monolito).
+apiVersion: v1
+kind: Service
+metadata:
+  name: corefid-monolito
+  namespace: corefid
+spec:
+  # El monolito sigue OnPrem; el gateway lo alcanza por DNS interno.
+  type: ExternalName
+  externalName: corefid-api.onprem.corefid.local
+  ports:
+    - { name: http, port: 80 }
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: corefid-auditoria
+  namespace: corefid
+spec:
+  parentRefs:
+    - name: corefid-gateway
+      namespace: gateway
+  hostnames: ["api.corefid.local"]
+  rules:
+    # Header para pruebas dirigidas: fuerza el microservicio sin afectar al resto del tráfico.
+    - matches:
+        - path: { type: PathPrefix, value: /api/auditoria }
+          headers:
+            - { name: X-Canary, value: auditoria }
+      backendRefs:
+        - { name: auditoria-api, port: 80 }
+    - matches:
+        - path: { type: PathPrefix, value: /api/auditoria }
+      backendRefs:
+        - name: corefid-monolito
+          port: 80
+          weight: 95
+        - name: auditoria-api
+          port: 80
+          weight: 5

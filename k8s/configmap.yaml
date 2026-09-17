@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auditoria-config
+  namespace: corefid
+data:
+  ASPNETCORE_ENVIRONMENT: Production
+  Autenticacion__Issuer: "https://sts.windows.net/<tenant-id>/"
+  Autenticacion__Audience: "api://corefid-audit"
+  # Con Authority la firma se valida con el JWKS de Entra ID (RS256); no hay clave compartida.
+  Autenticacion__Authority: "https://login.microsoftonline.com/<tenant-id>/v2.0"
+  Outbox__Publicador: RabbitMq
+  RabbitMq__Host: rabbitmq.mensajeria.svc.cluster.local
+  Auditoria__Consulta__MaximoRegistros: "1000"
