@@ -54,6 +54,14 @@ public sealed class DespachadorOutbox(
         await using var scope = scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AuditoriaDbContext>();
 
+        // La estrategia de reintentos de Npgsql exige ejecutar la transacción como unidad reintentable.
+        // Si se reintenta tras publicar, el mensaje puede salir dos veces: cubierto por at-least-once.
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(ct, c => ProcesarLoteEnTransaccionAsync(db, c));
+    }
+
+    private async Task<int> ProcesarLoteEnTransaccionAsync(AuditoriaDbContext db, CancellationToken ct)
+    {
+        db.ChangeTracker.Clear();
         await using var transaccion = await db.Database.BeginTransactionAsync(ct);
         var ahora = reloj.GetUtcNow();
 
