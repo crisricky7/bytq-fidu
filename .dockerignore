@@ -1,0 +1,9 @@
+**/bin
+**/obj
+**/.vs
+**/.vscode
+.git
+tests
+starter
+k8s
+*.md

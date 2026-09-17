@@ -1,0 +1,59 @@
+# Entorno local completo: PostgreSQL + RabbitMQ + microservicio.
+#   docker compose up --build
+#
+# Basado en starter/docker-compose.yml con tres cambios justificados:
+#  1. PostgreSQL ejecuta db/001_esquema.sql al crear el volumen.
+#  2. RabbitMQ define un usuario propio: "guest" solo acepta conexiones desde localhost
+#     y el servicio se conecta desde otro contenedor.
+#  3. Se agrega el servicio "auditoria-api".
+#
+# Todos los valores sensibles de este archivo son de DESARROLLO LOCAL (los mismos que entrega el
+# material del ejercicio) y se pueden sobrescribir con variables de entorno o un archivo .env.
+# En Kubernetes vienen de un Secret y la validación JWT usa el JWKS de Entra ID, sin clave compartida.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eval-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-audit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-<REDACTADO>}
+      POSTGRES_DB: auditdb
+    ports: ["5432:5432"]
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d auditdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: eval-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-auditoria}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-<REDACTADO>}
+    ports: ["5672:5672", "15672:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  auditoria-api:
+    build: .
+    container_name: auditoria-api
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Auditoria: "Host=postgres;Port=5432;Database=auditdb;Username=${POSTGRES_USER:-audit};Password=${POSTGRES_PASSWORD:-<REDACTADO>};Gss Encryption Mode=Disable"
+      Autenticacion__Issuer: "https://sts.windows.net/eval-tenant/"
+      Autenticacion__Audience: "api://corefid-audit"
+      Autenticacion__ClaveFirma: ${JWT_CLAVE_FIRMA:-<REDACTADO>}
+      Outbox__Publicador: RabbitMq
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Usuario: ${RABBITMQ_USER:-auditoria}
+      RabbitMq__Clave: ${RABBITMQ_PASSWORD:-<REDACTADO>}
+    ports: ["8080:8080"]
