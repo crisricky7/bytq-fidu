@@ -1,6 +1,7 @@
 # SPEC-002 — Adaptador Oracle para coexistencia con el monolito
 
 - **Estado:** Aprobada
+- **Issue:** [#2](https://github.com/crisricky7/bytq-fidu/issues/2)
 - **Prioridad:** Alta (bloquea el corte de `/api/auditoria/**`)
 - **Relacionado:** DECISIONES.md §2, §4
 

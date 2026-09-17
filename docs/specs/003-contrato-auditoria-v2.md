@@ -1,6 +1,7 @@
 # SPEC-003 — Contrato de Auditoría v2
 
 - **Estado:** Aprobada
+- **Issue:** [#3](https://github.com/crisricky7/bytq-fidu/issues/3)
 - **Prioridad:** Media (se inicia cuando el corte del contrato actual esté al 100 %)
 - **Relacionado:** DECISIONES.md §1 (defectos del contrato), §5
 
