@@ -23,6 +23,7 @@ Ningún secreto vive en el repositorio: el compose falla con un mensaje claro si
 | API + Swagger | http://localhost:8080/swagger |
 | Liveness / Readiness | http://localhost:8080/healthz · http://localhost:8080/readyz |
 | RabbitMQ (management) | http://localhost:15672 (`RABBITMQ_USER` / `RABBITMQ_PASSWORD` de `.env`) |
+| Correos capturados (Mailpit) | http://localhost:8025 |
 | PostgreSQL | `localhost:5432`, base `auditdb` (`POSTGRES_USER` / `POSTGRES_PASSWORD` de `.env`) |
 
 El esquema (`db/001_esquema.sql`) se aplica automáticamente al crear el volumen de PostgreSQL.
@@ -66,8 +67,9 @@ src/
   Auditoria.Application     Command/Query + handlers, puertos (repositorio, unidad de trabajo, lecturas)
   Auditoria.Infrastructure  EF Core/PostgreSQL, outbox, DespachadorOutbox, publicadores Log/RabbitMQ
   Auditoria.Api             Endpoints del contrato, JWT, health checks, Swagger, logs JSON
+  Auditoria.Notificaciones  Worker SPEC-001: consume auditoria.registrada y notifica acciones sensibles a Seguridad
 tests/                      Unitarias e integración
-db/001_esquema.sql          Esquema (tabla append-only, secuencia, outbox)
+db/                         001_esquema.sql (auditoría + outbox), 002_notificaciones.sql (idempotencia del worker)
 docs/specs/                  Especificaciones (SDD) del trabajo pendiente
 k8s/                        Deployment, Service, PDB, ConfigMap, plantilla de Secret, HTTPRoute canary
 starter/                    Material de partida: código legacy, contrato vigente, compose original
@@ -105,3 +107,17 @@ dotnet run --project src/Auditoria.Api
   original mediante `trace_parent`), y métricas `auditoria.outbox.publicados`,
   `auditoria.outbox.fallidos` y `auditoria.outbox.retraso`. Se exportan por OTLP al definir
   `OTEL_EXPORTER_OTLP_ENDPOINT`.
+
+## Notificación de acciones sensibles (SPEC-001)
+
+`auditoria-notificaciones` consume `auditoria.registrada` desde la cola quorum
+`corefid.auditoria.notificaciones`. Por cada evento con `esAccionSensible = true` envía un correo
+a Seguridad (en local lo captura Mailpit, http://localhost:8025).
+
+- **Sin duplicados:** idempotencia por `MessageId` en `notificaciones.notificacion_enviada`.
+- **Sin pérdidas:** reintentos con backoff; al superar `RabbitMq__MaximoIntentos` el broker mueve el
+  mensaje a `corefid.auditoria.notificaciones.dlq`. Los mensajes ilegibles van directo a la DLQ.
+- **Seguridad:** todos los valores del evento se codifican como HTML en el cuerpo del correo.
+
+Pruebas: `dotnet test tests/Auditoria.Notificaciones.Tests` (unitarias + Testcontainers con
+PostgreSQL y RabbitMQ).

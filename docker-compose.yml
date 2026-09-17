@@ -57,3 +57,28 @@ services:
       RabbitMq__Usuario: ${RABBITMQ_USER}
       RabbitMq__Clave: ${RABBITMQ_PASSWORD}
     ports: ["8080:8080"]
+
+  # SPEC-001: consumidor que notifica acciones sensibles a Seguridad.
+  auditoria-notificaciones:
+    build:
+      context: .
+      dockerfile: Dockerfile.notificaciones
+    container_name: auditoria-notificaciones
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      mailpit: { condition: service_started }
+    environment:
+      ConnectionStrings__Notificaciones: "Host=postgres;Port=5432;Database=auditdb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Gss Encryption Mode=Disable"
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Usuario: ${RABBITMQ_USER}
+      RabbitMq__Clave: ${RABBITMQ_PASSWORD}
+      Smtp__Host: mailpit
+      Smtp__Puerto: "1025"
+      Smtp__UsarTls: "false"
+
+  # Servidor SMTP de desarrollo: captura los correos y los muestra en http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.27
+    container_name: eval-mailpit
+    ports: ["8025:8025", "1025:1025"]
