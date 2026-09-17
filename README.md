@@ -4,9 +4,16 @@ Extracción del módulo de Auditoría del monolito CORE-FID a un microservicio .
 el contrato vigente (`starter/contrato/auditoria-legacy-v1.yaml`). Las decisiones de diseño, los
 hallazgos del código legacy y el plan de corte están en **[DECISIONES.md](DECISIONES.md)**.
 
-## Levantar todo (un comando)
+## Requisitos
 
-Requisito: Docker Desktop / Docker Engine con Compose v2.
+| Tarea | Qué se necesita |
+|---|---|
+| Levantar el ambiente | Docker Desktop o Docker Engine con Compose v2. La compilación ocurre dentro de la imagen; no hace falta el SDK de .NET. |
+| Generar `.env` | `scripts/init-env.sh` usa `openssl` (incluido en macOS, Linux y Git Bash). En Windows, `scripts/init-env.ps1` no requiere nada adicional. |
+| Llamar a la API | Un token JWT: `scripts/token-dev.mjs` requiere Node.js 18+, o puede generarse en jwt.io con `JWT_CLAVE_FIRMA` de `.env`. Health checks y Swagger no requieren token. |
+| Ejecutar las pruebas | SDK de .NET 10 y Docker en ejecución (las pruebas de integración usan Testcontainers). |
+
+## Levantar todo (un comando)
 
 ```bash
 ./scripts/init-env.sh && docker compose up --build
