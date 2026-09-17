@@ -9,6 +9,10 @@ using Auditoria.Infrastructure.Persistencia;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.OpenApi;
+using Npgsql;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +25,25 @@ builder.Logging.AddJsonConsole(o =>
     o.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
 });
 builder.Logging.Configure(o => o.ActivityTrackingOptions = ActivityTrackingOptions.TraceId | ActivityTrackingOptions.SpanId);
+
+// Trazas y métricas OpenTelemetry. Se exportan por OTLP solo si hay collector configurado
+// (OTEL_EXPORTER_OTLP_ENDPOINT); sin él la instrumentación sigue alimentando el traceId de los logs.
+var exportarOtlp = !string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]);
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(r => r.AddService(builder.Configuration["OTEL_SERVICE_NAME"] ?? "auditoria-api"))
+    .WithTracing(t =>
+    {
+        t.AddAspNetCoreInstrumentation(o => o.Filter = contexto =>
+                !contexto.Request.Path.StartsWithSegments("/healthz") && !contexto.Request.Path.StartsWithSegments("/readyz"))
+            .AddNpgsql()
+            .AddSource(Telemetria.Nombre);
+        if (exportarOtlp) t.AddOtlpExporter();
+    })
+    .WithMetrics(m =>
+    {
+        m.AddAspNetCoreInstrumentation().AddMeter(Telemetria.Nombre);
+        if (exportarOtlp) m.AddOtlpExporter();
+    });
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);

@@ -93,3 +93,11 @@ export ConnectionStrings__Auditoria="Host=localhost;Database=auditdb;Username=au
 export Autenticacion__ClaveFirma="<REDACTADO>"
 dotnet run --project src/Auditoria.Api
 ```
+
+## Observabilidad
+
+- Logs JSON en stdout con `TraceId`/`SpanId`; cabecera `X-Trace-Id` en cada respuesta.
+- OpenTelemetry: trazas de ASP.NET Core, Npgsql y la publicación del outbox (continúa la traza
+  original mediante `trace_parent`), y métricas `auditoria.outbox.publicados`,
+  `auditoria.outbox.fallidos` y `auditoria.outbox.retraso`. Se exportan por OTLP al definir
+  `OTEL_EXPORTER_OTLP_ENDPOINT`.

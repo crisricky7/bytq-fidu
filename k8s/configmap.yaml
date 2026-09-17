@@ -12,3 +12,5 @@ data:
   Outbox__Publicador: RabbitMq
   RabbitMq__Host: rabbitmq.mensajeria.svc.cluster.local
   Auditoria__Consulta__MaximoRegistros: "1000"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observabilidad.svc.cluster.local:4317"
+  OTEL_SERVICE_NAME: auditoria-api

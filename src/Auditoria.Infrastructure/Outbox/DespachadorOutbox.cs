@@ -83,10 +83,13 @@ public sealed class DespachadorOutbox(
                 await publicador.PublicarAsync(mensaje, ct);
                 mensaje.PublishedAt = reloj.GetUtcNow();
                 mensaje.LastError = null;
+                Telemetria.OutboxPublicados.Add(1);
+                Telemetria.OutboxRetraso.Record((mensaje.PublishedAt.Value - mensaje.OccurredAt).TotalSeconds);
             }
             catch (Exception ex) when (!ct.IsCancellationRequested)
             {
                 mensaje.Attempts++;
+                Telemetria.OutboxFallidos.Add(1);
                 mensaje.LastError = ex.Message.Length > 2000 ? ex.Message[..2000] : ex.Message;
                 mensaje.NextAttemptAt = ahora.Add(CalcularBackoff(mensaje.Attempts));
                 actividad?.SetStatus(ActivityStatusCode.Error, ex.Message);

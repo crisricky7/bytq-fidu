@@ -1,7 +1,7 @@
 # DECISIONES
 
 Microservicio de Auditoría extraído de CORE-FID (primera pieza del Strangler Fig).
-Alcance entregado: **P0 completo, P1 completo y P2 #13** (manifiestos K8s + HTTPRoute). OpenTelemetry solo queda documentado.
+Alcance entregado: **P0 y P1 completos; P2 #13** (manifiestos K8s + HTTPRoute) **y #14** (OpenTelemetry, sin collector en el compose).
 
 ## 1. Qué encontré en el código legacy (por gravedad)
 
@@ -54,7 +54,7 @@ Ahora el command guarda el registro **y** la fila `AuditoriaRegistrada` en `outb
 
 - **Consumidor de notificación a Seguridad** (idempotente por `MessageId`, HTML escapado). Es un bloqueante del corte.
 - **Adaptador Oracle** (`Oracle.EntityFrameworkCore`, secuencia compartida, convención de fecha) y pruebas contra Oracle XE.
-- **OpenTelemetry** (trazas ASP.NET Core + Npgsql + publicación, métricas de backlog del outbox, exportador OTLP). Hoy existe `traceId` en los logs JSON, en `X-Trace-Id` y en `trace_parent` del outbox, que el despachador usa como padre.
+- **Observabilidad completa**: hoy hay trazas OpenTelemetry (ASP.NET Core, Npgsql y la publicación del outbox, que continúa la traza con `trace_parent`) y métricas (`auditoria.outbox.publicados/fallidos/retraso`) exportadas por OTLP si se configura `OTEL_EXPORTER_OTLP_ENDPOINT`. Falta el collector en el compose, un gauge de pendientes, dashboards y alertas del canary, y propagar el contexto al consumidor en RabbitMQ.
 - **Contrato v2** (`/api/v1`): errores con estados HTTP reales, paginación por cursor, `usuario` tomado del token, fechas con zona y snapshots como objetos JSON. Se publica en paralelo y se migra consumidor por consumidor.
 - Retención y particionado por fecha de la tabla; limpieza de outbox publicado; pruebas de contrato automatizadas contra el YAML; pipeline CI (build, pruebas, escaneo de imagen); Helm en lugar de YAML plano.
 
