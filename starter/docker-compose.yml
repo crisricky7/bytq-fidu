@@ -1,0 +1,27 @@
+# Infraestructura local para el ejercicio. No la modifiques salvo que lo justifiques.
+# Levantar con:  docker compose up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eval-postgres
+    environment:
+      POSTGRES_USER: audit
+      POSTGRES_PASSWORD: <REDACTADO>
+      POSTGRES_DB: auditdb
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U audit -d auditdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Opcional (nivel P1). Management UI en http://localhost:15672  (guest/guest)
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: eval-rabbitmq
+    ports: ["5672:5672", "15672:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10

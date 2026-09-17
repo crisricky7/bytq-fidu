@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Auditoria.Api/Auditoria.Api.csproj" />
+    <Project Path="src/Auditoria.Application/Auditoria.Application.csproj" />
+    <Project Path="src/Auditoria.Domain/Auditoria.Domain.csproj" />
+    <Project Path="src/Auditoria.Infrastructure/Auditoria.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Auditoria.IntegrationTests/Auditoria.IntegrationTests.csproj" />
+    <Project Path="tests/Auditoria.UnitTests/Auditoria.UnitTests.csproj" />
+  </Folder>
+</Solution>
