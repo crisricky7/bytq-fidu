@@ -1,0 +1,41 @@
+# SPEC-001: worker de notificaciones. No expone HTTP; escala por consumidores de la cola quorum.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auditoria-notificaciones
+  namespace: corefid
+  labels: { app: auditoria-notificaciones }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: auditoria-notificaciones }
+  template:
+    metadata:
+      labels: { app: auditoria-notificaciones }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: worker
+          image: registry.corefid.local/auditoria-notificaciones:1.0.0
+          env:
+            - { name: RabbitMq__Host, value: rabbitmq.mensajeria.svc.cluster.local }
+            - { name: Smtp__Host, value: smtp.corefid.local }
+            - { name: Smtp__Puerto, value: "587" }
+            - { name: Notificaciones__Destinatario, value: seguridad@corefid.com.ec }
+          envFrom:
+            # ConnectionStrings__Notificaciones, RabbitMq__Usuario/Clave, Smtp__Usuario/Clave
+            - secretRef: { name: auditoria-notificaciones-secret }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 256Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}

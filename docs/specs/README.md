@@ -13,7 +13,7 @@ Trabajo con *Spec Driven Development*: ningún cambio se implementa sin una spec
 
 | Spec | Título | Estado | Prioridad | Issue |
 |---|---|---|---|---|
-| [001](001-notificacion-acciones-sensibles.md) | Notificación de acciones sensibles a Seguridad | Aprobada | Alta: bloquea el corte | [#1](https://github.com/crisricky7/bytq-fidu/issues/1) |
+| [001](001-notificacion-acciones-sensibles.md) | Notificación de acciones sensibles a Seguridad | Implementada | Alta: bloquea el corte | [#1](https://github.com/crisricky7/bytq-fidu/issues/1) |
 | [002](002-adaptador-oracle-coexistencia.md) | Adaptador Oracle para coexistencia con el monolito | Aprobada | Alta: bloquea el corte | [#2](https://github.com/crisricky7/bytq-fidu/issues/2) |
 | [003](003-contrato-auditoria-v2.md) | Contrato de Auditoría v2 | Aprobada | Media: después del corte | [#3](https://github.com/crisricky7/bytq-fidu/issues/3) |
 

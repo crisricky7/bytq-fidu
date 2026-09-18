@@ -1,6 +1,6 @@
 # SPEC-001 — Notificación de acciones sensibles a Seguridad
 
-- **Estado:** Aprobada
+- **Estado:** Implementada
 - **Issue:** [#1](https://github.com/crisricky7/bytq-fidu/issues/1)
 - **Prioridad:** Alta (bloquea el corte de `/api/auditoria/**`)
 - **Relacionado:** DECISIONES.md §1 (#1), §3, §4
